@@ -1,71 +1,57 @@
 import sqlite3
 
-# Connect to SQLite database
+# Connect to the SQLite database
 conn = sqlite3.connect('college_minor.db')
 cursor = conn.cursor()
 
-# Insert data for "Minor in Accountancy"
-minor_name = "Minor in Accountancy"
-total_hours = 15  # Total required credit hours for the minor
-
-# Insert minor into the MINOR table
+# Insert data for MINOR table
 cursor.execute('''
 INSERT INTO MINOR (name, total_hours) 
 VALUES (?, ?)
-''', (minor_name, total_hours))
+''', ('Minor in Mathematics', 15))
 
-# Get the minor_id of the newly inserted minor
-minor_id = cursor.lastrowid
+# Commit the insertion for MINOR table
+conn.commit()
 
-# Insert required courses for the minor into the minor_courses table
-required_courses = [
-    ('ACCTCY 2036', 'Accounting I', 3, 1),  # Required course
-    ('ACCTCY 2037', 'Accounting II', 3, 1),  # Required course
-    ('ACCTCY 2258', 'Computer-Based Data Systems', 3, 1),  # Required course
-    ('ACCTCY 4356', 'Financial Accounting Concepts', 3, 1),  # Required course
-    ('ACCTCY 3326', 'Financial Accounting Theory and Practice I', 3, 0),  # Optional course (part of the OR set)
-    ('ACCTCY 3346', 'Financial Accounting Theory and Practice II', 3, 0),  # Optional course (part of the OR set)
+# Fetch the minor_id for use in other tables
+cursor.execute('''
+SELECT id FROM MINOR WHERE name = ?
+''', ('Minor in Mathematics',))
+minor_id = cursor.fetchone()[0]
+
+# Insert data for minor_courses table (required core courses and optional courses)
+courses = [
+    ('MATH 1500', 'Introductory Calculus I', 3, 1),
+    ('MATH 1700', 'Introductory Calculus II', 3, 1),
+    ('MATH 2300', 'Introduction to Linear Algebra', 3, 1),
+    ('MATH 2320', 'Calculus for Engineers', 3, 0),
+    ('MATH 3000', 'Advanced Calculus', 3, 0),
+    ('MATH 4000', 'Abstract Algebra', 3, 0)
 ]
 
-# Insert elective courses (optional courses)
-elective_courses = [
-    ('ACCTCY 3328', 'Accounting Information Systems', 3, 0),  # Optional elective
-    ('ACCTCY 3347', 'Cost and Managerial Accounting', 3, 0),  # Optional elective
-    ('ACCTCY 4353', 'Introduction to Taxation', 3, 0),  # Optional elective
-]
-
-# Combine required and elective courses
-all_courses = required_courses + elective_courses
-
-# Insert courses into the minor_courses table
-for course in all_courses:
+for course in courses:
     cursor.execute('''
-    INSERT INTO minor_courses (minor_id, course_id, course_name, credits, required) 
+    INSERT INTO minor_courses (minor_id, course_id, course_name, credits, required)
     VALUES (?, ?, ?, ?, ?)
     ''', (minor_id, course[0], course[1], course[2], course[3]))
 
-# Insert minor categories (for required and elective courses)
-category_name = "Required Courses"
-required_hours = 12  # Required hours for the core courses
-category_dept = "School of Accountancy"
+# Commit the insertion for minor_courses table
+conn.commit()
 
-cursor.execute('''
-INSERT INTO minor_categories (minor_id, category_name, required_hours, dept) 
-VALUES (?, ?, ?, ?)
-''', (minor_id, category_name, required_hours, category_dept))
+# Insert data for minor_categories table
+categories = [
+    ('Core Courses', 9, 'Mathematics', None),  # Core courses category, 9 credit hours, Mathematics dept
+    ('Advanced Courses', 6, None, 4000)  # Advanced courses category, 6 required credit hours, 4000-level
+]
 
-category_name = "Elective Courses"
-required_hours = 3  # Required hours for electives
+for category in categories:
+    cursor.execute('''
+    INSERT INTO minor_categories (minor_id, category_name, required_hours, dept, min_number)
+    VALUES (?, ?, ?, ?, ?)
+    ''', (minor_id, category[0], category[1], category[2], category[3]))
 
-cursor.execute('''
-INSERT INTO minor_categories (minor_id, category_name, required_hours, dept) 
-VALUES (?, ?, ?, ?)
-''', (minor_id, category_name, required_hours, category_dept))
-
-# Commit changes to the database
+# Commit the insertion for minor_categories table
 conn.commit()
 
 # Close the connection
 conn.close()
-
-print("Data has been successfully added to the database.")
