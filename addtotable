@@ -1,0 +1,24 @@
+import sqlite3
+
+# Connect to SQLite database
+conn = sqlite3.connect('./CCSC_Hackathon_Miz/college.db')
+cursor = conn.cursor()
+
+# Add 'fall' and 'spring' columns to the 'class' table
+cursor.execute('''
+ALTER TABLE class
+ADD COLUMN fall INTEGER
+''')
+
+cursor.execute('''
+ALTER TABLE class
+ADD COLUMN spring INTEGER
+''')
+
+# Commit changes to the database
+conn.commit()
+
+# Close the connection
+conn.close()
+
+print("Columns 'fall' and 'spring' have been successfully added to the 'class' table.")

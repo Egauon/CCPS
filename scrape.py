@@ -1,7 +1,23 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+import sqlite3
 
+def insert_class(id, name, dept):
+    # Connect to the SQLite database
+    conn = sqlite3.connect("./CCSC_Hackathon_Miz/college.db")
+    cursor = conn.cursor()
+
+    # SQL query to insert a new class
+    cursor.execute('''
+        INSERT OR IGNORE INTO class (id, name, dept)
+        VALUES (?, ?, ?)
+    ''', (id, name, dept))
+
+    # Commit changes and close the connection
+    conn.commit()
+    conn.close()
+    print(f"Class {name} added successfully!")
 
 
 
@@ -20,11 +36,11 @@ soup = BeautifulSoup(response.text, "html.parser")
 
 
 links = soup.find_all("a", href=lambda x: x and "/search/?" in x)
-links=["A"]
+
 for link in links:
 
 
-    url = "https://catalog.missouri.edu" + "/search/?P=BIO_SC%203650"
+    url = "https://catalog.missouri.edu" + link["href"]
 
     response = requests.get(url, headers=headers)
 
@@ -43,22 +59,28 @@ for link in links:
     prereq = 0
     prereqs = []
     try:
-        prereq = stringify.split("Prerequisites:")[1].split(" in ")
-        prereq.pop(0)
-        for pre in prereq:
-            prereqs.append(pre.split(" ")[0] + " " + pre.split(" ")[1][0:4])
-    except:
+        prereq = stringify.split("Prerequisites:")[1].split("Recommen")[0]
+    except: 
         try:
-            prereqs.append(stringify.split("Prerequisites:")[1].split(" standing ")[0])
+            prereq = stringify.split("Prerequisites:")[1]
         except:
-            prereqs = []
+            pass
+    
 
 
     class_desc = stringify.split("Credit Hour")[0]
     print("Credit Hours: ", credit_hours)
-    print("prereq: ", prereqs)
+    print("prereq: ", prereq)
     print("title: ", class_title)
     print("Description: ", class_desc)
 
+
+    insert_class(class_title.split(": ")[0].split()[1], class_title.split(": ")[1], class_title.split(": ")[0].split()[0])
+
+
+# Example of adding a new class
+
+
     #Credit Hour</strong><strong>s</strong>:
+
 
